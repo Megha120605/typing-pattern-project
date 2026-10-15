@@ -1,0 +1,405 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Typing Pattern Analysis</title>
+
+<style>
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    padding: 30px 16px;
+    font-family: "Segoe UI", Arial, sans-serif;
+    background: linear-gradient(135deg, #eef1ff, #f7f3ff, #e9f8f5);
+    color: #24264b;
+    min-height: 100vh;
+}
+
+.container {
+    max-width: 850px;
+    margin: auto;
+    background: white;
+    border-radius: 22px;
+    overflow: hidden;
+    box-shadow: 0 15px 45px rgba(54, 51, 110, 0.12);
+}
+
+.header {
+    background: linear-gradient(120deg, #4647b9, #8060dc);
+    padding: 30px 24px;
+    color: white;
+    text-align: center;
+}
+
+.header .icon { font-size: 35px; }
+
+.header h1 {
+    margin: 10px 0;
+    font-size: 29px;
+}
+
+.header p {
+    margin: 0;
+    color: #e9e7ff;
+    font-size: 14px;
+}
+
+.content { padding: 28px; }
+
+.section-title {
+    margin: 0 0 7px;
+    font-size: 21px;
+}
+
+.subtitle {
+    color: #777994;
+    margin: 0 0 24px;
+    font-size: 14px;
+}
+
+label {
+    display: block;
+    font-weight: 600;
+    font-size: 14px;
+    margin: 17px 0 8px;
+}
+
+input, select, textarea {
+    width: 100%;
+    padding: 13px 14px;
+    border: 1px solid #dedff0;
+    border-radius: 10px;
+    font: inherit;
+    color: #28294c;
+    background: #fbfbff;
+    outline: none;
+    transition: border-color .2s, box-shadow .2s;
+}
+
+input:focus, select:focus, textarea:focus {
+    border-color: #7770df;
+    box-shadow: 0 0 0 3px #7770df20;
+}
+
+.topic-card {
+    margin-top: 16px;
+    padding: 17px;
+    border-radius: 12px;
+    background: #f0efff;
+    border: 1px solid #e0ddff;
+}
+
+.topic-label {
+    color: #6657c7;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+#topicDescription {
+    font-size: 17px;
+    font-weight: 600;
+    line-height: 1.5;
+    margin: 7px 0 0;
+}
+
+textarea {
+    height: 190px;
+    resize: vertical;
+    line-height: 1.7;
+    background: #fff;
+}
+
+textarea::placeholder, input::placeholder {
+    color: #a0a2b7;
+}
+
+.hint {
+    font-size: 12px;
+    color: #777994;
+    margin-top: 7px;
+}
+
+.buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+button {
+    border: none;
+    border-radius: 10px;
+    padding: 13px 18px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform .15s, filter .15s;
+}
+
+button:hover {
+    filter: brightness(.96);
+    transform: translateY(-1px);
+}
+
+.start-btn {
+    background: #ecebff;
+    color: #5145bd;
+}
+
+.submit-btn {
+    background: linear-gradient(120deg, #514bc4, #8060dc);
+    color: white;
+    flex: 1;
+}
+
+.download-btn {
+    background: #e3f7ee;
+    color: #167a58;
+}
+
+.footer {
+    padding: 16px 24px;
+    background: #fafaff;
+    border-top: 1px solid #eeeeF7;
+    color: #777994;
+    font-size: 12px;
+    text-align: center;
+}
+
+@media (max-width: 560px) {
+    body { padding: 12px 8px; }
+    .header { padding: 25px 16px; }
+    .header h1 { font-size: 23px; }
+    .content { padding: 20px 16px; }
+    .buttons { flex-direction: column; }
+    button { width: 100%; }
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+    <header class="header">
+        <div class="icon">⌨️</div>
+        <h1>Keystroke Intelligence</h1>
+        <p>ML-Based Individual Identification Using Typing Patterns</p>
+    </header>
+
+    <main class="content">
+        <h2 class="section-title">Typing Data Collection</h2>
+        <p class="subtitle">
+            Enter your participant ID, select a topic, and type your response.
+        </p>
+
+        <label for="participantId">Participant ID</label>
+        <input type="text" id="participantId"
+               placeholder="Example: P01" autocomplete="off">
+
+        <label for="topic">Choose a topic</label>
+        <select id="topic">
+            <option value="1">Topic 1: Technology in Daily Life</option>
+            <option value="2">Topic 2: Importance of Education</option>
+            <option value="3">Topic 3: Benefits of Exercise</option>
+            <option value="4">Topic 4: Environmental Protection</option>
+            <option value="5">Topic 5: Role of Social Media</option>
+        </select>
+
+        <div class="topic-card">
+            <div class="topic-label">Your writing prompt</div>
+            <p id="topicDescription">How has technology changed our daily life?</p>
+        </div>
+
+        <label for="typingArea">Type your response</label>
+        <textarea id="typingArea"
+                  placeholder="Write your paragraph here..."></textarea>
+        <div class="hint">Tip: Type naturally. Your keystroke timing will be recorded.</div>
+
+        <div class="buttons">
+            <button class="start-btn" onclick="startTyping()">▶ Start</button>
+            <button class="submit-btn" onclick="submitData()">Submit Sample →</button>
+            <button class="download-btn" onclick="downloadCSV()">↓ Download CSV</button>
+        </div>
+    </main>
+
+    <footer class="footer">
+        Typing Pattern Data Collection Prototype · Research project
+    </footer>
+</div>
+
+<script>
+let startTime = null;
+let lastKeyTime = null;
+let keyData = [];
+let corrections = 0;
+let pauseCount = 0;
+let collectedData = [];
+
+const typingArea = document.getElementById("typingArea");
+const topicSelect = document.getElementById("topic");
+const topicDescription = document.getElementById("topicDescription");
+
+const topics = {
+    "1": "How has technology changed our daily life?",
+    "2": "Why is education important for everyone?",
+    "3": "What are the benefits of regular exercise?",
+    "4": "How can we protect the environment?",
+    "5": "How does social media affect our lives?"
+};
+
+topicSelect.addEventListener("change", function() {
+    topicDescription.textContent = topics[topicSelect.value];
+});
+
+function startTyping() {
+    startTime = null;
+    lastKeyTime = null;
+    keyData = [];
+    corrections = 0;
+    pauseCount = 0;
+    typingArea.value = "";
+    typingArea.focus();
+    alert("You can start typing now.");
+}
+
+typingArea.addEventListener("keydown", function(event) {
+    let currentTime = performance.now();
+
+    if (startTime === null) {
+        startTime = currentTime;
+    }
+
+    let timeBetweenKeys = 0;
+
+    if (lastKeyTime !== null) {
+        timeBetweenKeys = currentTime - lastKeyTime;
+        if (timeBetweenKeys > 1000) pauseCount++;
+    }
+
+    if (event.key === "Backspace") corrections++;
+
+    keyData.push({
+        key: event.key,
+        keyPressTime: currentTime,
+        timeBetweenKeys: timeBetweenKeys
+    });
+
+    lastKeyTime = currentTime;
+});
+
+typingArea.addEventListener("keyup", function(event) {
+    let currentTime = performance.now();
+
+    for (let i = keyData.length - 1; i >= 0; i--) {
+        if (keyData[i].key === event.key &&
+            keyData[i].keyReleaseTime === undefined) {
+            keyData[i].keyReleaseTime = currentTime;
+            keyData[i].keyHoldDuration =
+                currentTime - keyData[i].keyPressTime;
+            break;
+        }
+    }
+});
+
+function submitData() {
+    let participantId =
+        document.getElementById("participantId").value.trim();
+    let text = typingArea.value.trim();
+
+    if (participantId === "" || text === "") {
+        alert("Please enter Participant ID and type something.");
+        return;
+    }
+
+    if (startTime === null) {
+        alert("Please click Start before typing your response.");
+        return;
+    }
+
+    let totalTime = (performance.now() - startTime) / 1000;
+    let words = text.split(/\s+/).length;
+    let minutes = totalTime / 60;
+    let wpm = minutes > 0 ? words / minutes : 0;
+
+    let holdDurations = keyData
+        .filter(item => item.keyHoldDuration !== undefined)
+        .map(item => item.keyHoldDuration);
+
+    let averageHoldDuration = holdDurations.length
+        ? holdDurations.reduce((a, b) => a + b, 0) / holdDurations.length
+        : 0;
+
+    let intervals = keyData
+        .filter(item => item.timeBetweenKeys > 0)
+        .map(item => item.timeBetweenKeys);
+
+    let averageTimeBetweenKeys = intervals.length
+        ? intervals.reduce((a, b) => a + b, 0) / intervals.length
+        : 0;
+
+    let sentences = text.split(/[.!?]+/)
+        .filter(sentence => sentence.trim() !== "");
+    let sentenceCount = sentences.length;
+    let averageSentenceLength =
+        sentenceCount > 0 ? words / sentenceCount : 0;
+
+    collectedData.push([
+        participantId,
+        topicSelect.value,
+        wpm.toFixed(2),
+        averageHoldDuration.toFixed(2),
+        averageTimeBetweenKeys.toFixed(2),
+        pauseCount,
+        corrections,
+        words,
+        sentenceCount,
+        averageSentenceLength.toFixed(2)
+    ]);
+
+    alert(
+        "Typing Data Recorded!\n\n" +
+        "Participant: " + participantId + "\n" +
+        "Typing Speed: " + wpm.toFixed(2) + " WPM\n" +
+        "Average Key Hold Duration: " +
+            averageHoldDuration.toFixed(2) + " ms\n" +
+        "Average Time Between Keystrokes: " +
+            averageTimeBetweenKeys.toFixed(2) + " ms\n" +
+        "Pauses: " + pauseCount + "\n" +
+        "Corrections: " + corrections + "\n" +
+        "Word Count: " + words + "\n" +
+        "Sentence Count: " + sentenceCount + "\n" +
+        "Average Sentence Length: " +
+            averageSentenceLength.toFixed(2)
+    );
+}
+
+function downloadCSV() {
+    if (collectedData.length === 0) {
+        alert("No data available. Please submit a sample first.");
+        return;
+    }
+
+    let csv = "Participant ID,Topic,Typing Speed,Average Key Hold Duration,Average Time Between Keystrokes,Pauses,Corrections,Word Count,Sentence Count,Average Sentence Length\n";
+
+    collectedData.forEach(function(data) {
+        csv += data.join(",") + "\n";
+    });
+
+    let blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    let url = URL.createObjectURL(blob);
+    let link = document.createElement("a");
+
+    link.href = url;
+    link.download = "typing_data.csv";
+    link.click();
+
+    URL.revokeObjectURL(url);
+}
+</script>
+</body>
+</html>

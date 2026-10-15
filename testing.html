@@ -1,0 +1,334 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Typing Pattern Testing</title>
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: #f2f5fa;
+    margin: 0;
+    padding: 25px;
+}
+.container {
+    max-width: 750px;
+    margin: auto;
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 3px 12px #0002;
+}
+h1 {
+    text-align: center;
+    color: #243b64;
+}
+label {
+    display: block;
+    margin-top: 15px;
+    font-weight: bold;
+}
+input, select, textarea {
+    width: 100%;
+    padding: 10px;
+    margin-top: 7px;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 15px;
+}
+textarea {
+    min-height: 150px;
+    resize: vertical;
+}
+button {
+    margin-top: 15px;
+    padding: 11px 16px;
+    border: none;
+    border-radius: 6px;
+    background: #2855a6;
+    color: white;
+    cursor: pointer;
+    margin-right: 7px;
+}
+button:hover {
+    background: #193d7b;
+}
+#result {
+    margin-top: 20px;
+    padding: 15px;
+    background: #edf7ed;
+    border-radius: 6px;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+.note {
+    color: #555;
+    font-size: 14px;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<h1>Typing Pattern Testing</h1>
+
+<p class="note">
+Enter your participant ID, select a topic, and type naturally.
+Submit each sample and download your testing CSV.
+</p>
+
+<label for="pid">Participant ID</label>
+<input id="pid" placeholder="Example: P01" required>
+
+<label for="topic">Select Topic</label>
+<select id="topic">
+    <option value="Healthy Eating">Healthy Eating</option>
+    <option value="Importance of Time Management">
+        Importance of Time Management
+    </option>
+</select>
+
+<label for="typing">Type Here</label>
+<textarea id="typing"
+    placeholder="Click Start Typing and enter your text..."
+    disabled></textarea>
+
+<button type="button" id="startBtn">Start Typing</button>
+<button type="button" id="submitBtn">Submit Sample</button>
+<button type="button" id="downloadBtn">Download Testing CSV</button>
+
+<div id="result" role="status">No sample submitted yet.</div>
+
+</div>
+
+<script>
+const columns = [
+    "Participant ID",
+    "Topic",
+    "Typing Speed",
+    "Average Key Hold Duration",
+    "Average Time Between Keystrokes",
+    "Pauses",
+    "Corrections",
+    "Word Count",
+    "Sentence Count",
+    "Average Sentence Length"
+];
+
+let samples = [];
+let keyDowns = new Map();
+let started = false;
+let startTime = 0;
+let lastKeyUp = null;
+let intervals = [];
+let holds = [];
+let pauses = 0;
+let corrections = 0;
+let lastTextLength = 0;
+
+const pid = document.getElementById("pid");
+const topic = document.getElementById("topic");
+const typing = document.getElementById("typing");
+const result = document.getElementById("result");
+
+function resetTyping() {
+    started = false;
+    startTime = 0;
+    lastKeyUp = null;
+    intervals = [];
+    holds = [];
+    pauses = 0;
+    corrections = 0;
+    keyDowns.clear();
+    lastTextLength = 0;
+    typing.value = "";
+    typing.disabled = true;
+}
+
+document.getElementById("startBtn").addEventListener("click", () => {
+    if (!pid.value.trim()) {
+        alert("Please enter the Participant ID.");
+        pid.focus();
+        return;
+    }
+
+    if (started) {
+        alert("Typing has already started. Please submit this sample first.");
+        return;
+    }
+
+    resetTyping();
+
+    started = true;
+    startTime = performance.now();
+    typing.disabled = false;
+
+    alert("Start typing now");
+
+    typing.focus();
+    result.textContent = "Typing in progress...";
+});
+
+typing.addEventListener("keydown", (e) => {
+    if (!started || e.repeat) return;
+
+    const now = performance.now();
+
+    if (lastKeyUp !== null) {
+        const gap = now - lastKeyUp;
+        intervals.push(gap);
+
+        if (gap > 1000) {
+            pauses++;
+        }
+    }
+
+    keyDowns.set(e.code, now);
+});
+
+typing.addEventListener("keyup", (e) => {
+    if (!started) return;
+
+    const now = performance.now();
+
+    if (keyDowns.has(e.code)) {
+        holds.push(now - keyDowns.get(e.code));
+        keyDowns.delete(e.code);
+    }
+
+    lastKeyUp = now;
+});
+
+typing.addEventListener("input", () => {
+    if (!started) return;
+
+    if (typing.value.length < lastTextLength) {
+        corrections++;
+    }
+
+    lastTextLength = typing.value.length;
+});
+
+function average(values) {
+    return values.length
+        ? values.reduce((sum, n) => sum + n, 0) / values.length
+        : 0;
+}
+
+document.getElementById("submitBtn").addEventListener("click", () => {
+    if (!started) {
+        alert("Click Start Typing before submitting.");
+        return;
+    }
+
+    const participant = pid.value.trim().toUpperCase();
+    const text = typing.value.trim();
+
+    if (!text) {
+        alert("Please type some text before submitting.");
+        return;
+    }
+
+    const elapsedMinutes = (performance.now() - startTime) / 60000;
+    const words = text.match(/\S+/g) || [];
+    const sentences = text.split(/[.!?]+/)
+        .filter(s => s.trim().length > 0);
+
+    const speed = elapsedMinutes > 0
+        ? words.length / elapsedMinutes
+        : 0;
+
+    const avgSentenceLength = sentences.length
+        ? words.length / sentences.length
+        : 0;
+
+    const sample = {
+        "Participant ID": participant,
+        "Topic": topic.value,
+        "Typing Speed": Number(speed.toFixed(2)),
+        "Average Key Hold Duration": Number(average(holds).toFixed(2)),
+        "Average Time Between Keystrokes": Number(average(intervals).toFixed(2)),
+        "Pauses": pauses,
+        "Corrections": corrections,
+        "Word Count": words.length,
+        "Sentence Count": sentences.length,
+        "Average Sentence Length": Number(avgSentenceLength.toFixed(2))
+    };
+
+    samples.push(sample);
+
+    alert(
+        "TYPING ANALYSIS RESULTS\n\n" +
+        "Participant ID: " + sample["Participant ID"] + "\n" +
+        "Topic: " + sample["Topic"] + "\n\n" +
+        "Typing Speed: " + sample["Typing Speed"] + " words/minute\n" +
+        "Average Key Hold Duration: " +
+            sample["Average Key Hold Duration"] + " ms\n" +
+        "Average Time Between Keystrokes: " +
+            sample["Average Time Between Keystrokes"] + " ms\n" +
+        "Pauses: " + sample["Pauses"] + "\n" +
+        "Corrections: " + sample["Corrections"] + "\n" +
+        "Word Count: " + sample["Word Count"] + "\n" +
+        "Sentence Count: " + sample["Sentence Count"] + "\n" +
+        "Average Sentence Length: " +
+            sample["Average Sentence Length"] + " words\n\n" +
+        "Samples collected: " + samples.length +
+        "\n\nClick Download Testing CSV to save your data."
+    );
+
+    result.textContent =
+        "Testing sample saved successfully!\n\n" +
+        "Participant ID: " + participant + "\n" +
+        "Topic: " + topic.value + "\n" +
+        "Samples collected in this session: " + samples.length +
+        "\n\nClick Download Testing CSV to save your data.";
+
+    resetTyping();
+});
+
+document.getElementById("downloadBtn").addEventListener("click", () => {
+    if (!samples.length) {
+        alert("No samples collected yet.");
+        return;
+    }
+
+    const escapeCSV = value =>
+        '"' + String(value).replace(/"/g, '""') + '"';
+
+    const rows = [
+        columns.map(escapeCSV).join(","),
+        ...samples.map(sample =>
+            columns.map(col => escapeCSV(sample[col])).join(",")
+        )
+    ];
+
+    const blob = new Blob(["\uFEFF" + rows.join("\r\n")], {
+        type: "text/csv;charset=utf-8;"
+    });
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download = "testing_data.csv";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+});
+
+window.addEventListener("beforeunload", (e) => {
+    if (samples.length) {
+        e.preventDefault();
+        e.returnValue = "";
+    }
+});
+</script>
+
+</body>
+</html>
